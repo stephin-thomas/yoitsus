@@ -8,7 +8,6 @@ A discord bot written in **Rust** with the help of [serenity](https://github.com
 - **Play songs** from Youtube using a url or a search phrase
 - Add complete Youtube **playlists** to the song queue
 - **Maintain a queue** of songs which you can pause, skip and resume
-- **ChatGPT** integration
 - **Easy to use**
 
 ## How to install
