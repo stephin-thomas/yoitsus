@@ -4,8 +4,9 @@ use crate::Error;
 use anyhow::Result;
 use anyhow::anyhow;
 use poise;
-use poise::serenity_prelude::CreateEmbed;
-use poise::serenity_prelude::CreateMessage;
+use poise::serenity_prelude as serenity;
+use serenity::CreateEmbed;
+use serenity::CreateMessage;
 use rand::seq::SliceRandom;
 
 use songbird::input::Compose;
@@ -105,10 +106,6 @@ pub async fn playlist(
     ctx: Context<'_>,
     #[description = "Show current playlist"] _param: Option<String>,
 ) -> Result<(), Error> {
-    // let handler_lock = get_voice_handler(&ctx).await?;
-    // let handler = handler_lock.lock().await;
-    // let queue = handler.queue().current().iter();
-    // let id = ctx.channel_id();
 
     let mut data = ctx.data().queue.lock().await;
     let mut embed = CreateEmbed::new()
