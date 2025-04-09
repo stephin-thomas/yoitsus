@@ -1,4 +1,5 @@
 use poise;
+use reqwest::ClientBuilder as HttpClientBuilder;
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
 use serenity::all::ActivityData;
@@ -182,7 +183,12 @@ async fn main() {
         .framework(framework)
         .register_songbird()
         .event_handler(Handler)
-        .type_map_insert::<HttpKey>(HttpClient::new())
+        .type_map_insert::<HttpKey>(
+            HttpClientBuilder::new()
+                .use_rustls_tls()
+                .build()
+                .unwrap(),
+        )
         .await
         .expect("Err creating client");
 

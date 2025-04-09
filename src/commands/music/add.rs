@@ -64,7 +64,7 @@ struct AudioProgressNotifier {
 #[serenity::async_trait]
 impl<'a> VoiceEventHandler for AudioProgressNotifier {
     async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
-        info!("Periodic event triggered");
+        //info!("Periodic event triggered");
         if self.msg.lock().await.is_none() || self.cur_song.lock().await.is_none() {
             return Some(Event::Cancel);
         }
@@ -88,6 +88,9 @@ impl<'a> VoiceEventHandler for AudioProgressNotifier {
                     || track_state.playing == PlayMode::Pause
                     || track_state.playing == PlayMode::End
                 {
+                    let embed = create_now_playing_embed(metadata, &track_state).await;
+                    let edit_builder = EditMessage::default().embed(embed);
+                    msg.edit(&self.http, edit_builder).await.ok();
                     return Some(Event::Cancel);
                 }
                 let embed = create_now_playing_embed(metadata, &track_state).await;

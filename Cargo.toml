@@ -18,7 +18,7 @@ regex = "1.11.1"
 #chat-gpt-lib-rs = "0.6.6"
 dotenvy = "0.15.7"
 poise = "0.6.1"
-reqwest = "0.12.15"
+reqwest = {version="0.12.15", features = []}
 anyhow = "1.0.97"
 symphonia = {version="0.5.4", features = [ "aac", "mp3", "isomp4", "alac"  ]}
 url = "2.5.4"
@@ -26,3 +26,9 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 rand = "0.9.0"
 
+[workspace.metadata.cross.target.aarch64-unknown-linux-gnu]
+# Install libssl-dev:arm64, see <https://github.com/cross-rs/cross/blob/main/docs/custom_images.md#adding-dependencies-to-existing-images>
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get --assume-yes install libssl-dev:$CROSS_DEB_ARCH libopus-dev:$CROSS_DEB_ARCH"
+]
