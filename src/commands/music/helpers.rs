@@ -79,11 +79,11 @@ use serde_json;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct YoutubeVideo {
-    pub id: String, // Or u32/u64 based on your actual data type
+    //pub id: String, // Or u32/u64 based on your actual data type
     pub title: String,
     //pub description: Option<String>,
     // pub thumbnails: Vec<Thumbnail>,
-    pub view_count: u32,
+    //pub view_count: u64,
     pub url: String,
     // Add other relevant fields based on the JSON structure
     // This is just a basic structure to show how to map fields

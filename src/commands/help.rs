@@ -2,8 +2,8 @@ use crate::Context;
 use crate::Error;
 use poise::samples::HelpConfiguration;
 
-// Custom help menu
 #[poise::command(prefix_command, track_edits, slash_command)]
+/// help menu
 pub async fn help(
     ctx: Context<'_>,
     #[description = "Specific command to show help about"]

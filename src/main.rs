@@ -29,7 +29,9 @@ use commands::music::play;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 struct Data {
+    //cur_song:Arc<Mutex<Option<AuxMetadata>>>,
     queue: Arc<Mutex<Vec<YoutubeDl<'static>>>>,
+    now_playing_msg: Arc<Mutex<Option<serenity::Message>>>,
 }
 
 struct Handler;
@@ -62,7 +64,7 @@ fn create_invite_link(client_id: &str, permissions: usize) -> String {
     return url.to_string();
 }
 
-async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
+async fn on_error<'a>(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
     // They are many errors that can occur, so we only handle the ones we want to customize
     // and forward the rest to the default handler
@@ -101,7 +103,8 @@ async fn main() {
             resume(),
             shuffle(),
             disconnect(),
-            nowplaying(),
+            loop_toggle(),
+            //nowplaying(),
             playlist(),
         ],
         prefix_options: poise::PrefixFrameworkOptions {
@@ -162,6 +165,8 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     queue: Arc::new(Mutex::new(vec![])),
+                    // cur_song:Arc::new(Mutex::new(None)),
+                    now_playing_msg: Arc::new(Mutex::new(None)),
                 })
             })
         })

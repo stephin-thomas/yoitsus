@@ -35,7 +35,7 @@ pub async fn join_n_get_voice_channel_handler(
     ))
 }
 
-pub async fn get_voice_handler(
+pub async fn get_current_voice_chan_handler(
     ctx: &Context<'_>,
 ) -> anyhow::Result<Arc<tokio::sync::Mutex<Call>>, anyhow::Error> {
     let manager = songbird::get(ctx.serenity_context())
