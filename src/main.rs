@@ -1,7 +1,7 @@
 use poise;
-use reqwest::ClientBuilder as HttpClientBuilder;
 use poise::serenity_prelude as serenity;
 use reqwest::Client as HttpClient;
+use reqwest::ClientBuilder as HttpClientBuilder;
 use serenity::all::ActivityData;
 use serenity::async_trait;
 use serenity::model::event::ResumedEvent;
@@ -105,6 +105,7 @@ async fn main() {
             shuffle(),
             disconnect(),
             loop_toggle(),
+            join(),
             //nowplaying(),
             playlist(),
         ],
@@ -183,12 +184,7 @@ async fn main() {
         .framework(framework)
         .register_songbird()
         .event_handler(Handler)
-        .type_map_insert::<HttpKey>(
-            HttpClientBuilder::new()
-                .use_rustls_tls()
-                .build()
-                .unwrap(),
-        )
+        .type_map_insert::<HttpKey>(HttpClientBuilder::new().use_rustls_tls().build().unwrap())
         .await
         .expect("Err creating client");
 

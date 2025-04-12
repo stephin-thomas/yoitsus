@@ -29,6 +29,10 @@ pub(crate) fn is_youtube_link(url_string: &str) -> ParseYtLink {
                             && url.query_pairs().any(|(key, _)| key == "v")
                         {
                             return ParseYtLink::Song;
+                        } else if path.starts_with("/watch")
+                            && url.query_pairs().any(|(key, _)| key == "list")
+                        {
+                            return ParseYtLink::Playlist;
                         } else if path.starts_with("/playlist")
                             && url.query_pairs().any(|(key, _)| key == "list")
                         {

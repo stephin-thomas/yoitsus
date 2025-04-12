@@ -6,16 +6,11 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# serenity = { version = "0.12", features = ["client", "standard_framework", "voice", "cache"]}
 tokio = { version = "1.44.2", features = ["macros", "rt-multi-thread", "signal"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 songbird = { version = "0.5.0", features = [ "builtin-queue", "serenity","driver"] }
-#lazy_static = "1.5.0"
-#rand = "0.9.0"
-#chrono = "0.4.40"
 regex = "1.11.1"
-#chat-gpt-lib-rs = "0.6.6"
 dotenvy = "0.15.7"
 poise = "0.6.1"
 reqwest = {version="0.12.15", features = []}

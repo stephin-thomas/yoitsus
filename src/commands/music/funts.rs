@@ -1,75 +1,77 @@
 use std::time::Duration;
 
-use super::common::get_current_voice_chan_handler;
 use crate::Context;
 use crate::Error;
 use crate::commands::music::common::join_n_get_voice_channel_handler;
 use anyhow::Result;
 use anyhow::anyhow;
 use poise;
-use poise::CreateReply;
 use poise::serenity_prelude as serenity;
 use rand::seq::SliceRandom;
 use serenity::CreateEmbed;
 
 use songbird::input::AuxMetadata;
-use songbird::input::Compose;
 use songbird::tracks::LoopState;
 use songbird::tracks::Queued;
 use songbird::tracks::{PlayMode, TrackState};
 
-async fn show_n_delete_msg(ctx: Context<'_>, msg: &str) -> anyhow::Result<()> {
-    let msg = ctx.say(msg).await?;
-    tokio::time::sleep(Duration::from_secs(5)).await;
-    let _ = msg.delete(ctx).await?;
-    Ok(())
-}
+// async fn show_n_delete_msg(ctx: Context<'_>, msg: &str) -> anyhow::Result<()> {
+//     let msg = ctx.say(msg).await?;
+//     //tokio::time::sleep(Duration::from_secs(1)).await;
+//     let _ = msg.delete(ctx).await?;
+//     Ok(())
+// }
 
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 /// "Skip currently playing song in the queue"
 pub async fn next(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
     {
-        let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+        let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
         let handler = handler_lock.lock().await;
         handler.queue().skip()?;
     }
-    show_n_delete_msg(ctx, "song skipped").await?;
-    //ctx.say("song skipped").await?;
+    //    show_n_delete_msg(ctx, "song skipped").await?;
+    ctx.say("song skipped").await?;
     Ok(())
 }
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 /// "Pause song in the queue"
 pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
     {
-        let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+        let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
+        //let handler_lock = get_current_guild_handler(&ctx).await?;
         let handler = handler_lock.lock().await;
         handler.queue().pause()?;
     }
-    show_n_delete_msg(ctx, "song paused").await?;
+    ctx.say("song paused").await?;
+    //show_n_delete_msg(ctx, "song paused").await?;
 
     Ok(())
 }
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 ///"Resume song in the queue"
 pub async fn resume(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
     {
-        let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+        //let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+
+        let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
         let handler = handler_lock.lock().await;
         handler.queue().resume()?;
     }
-    show_n_delete_msg(ctx, "song resumed").await?;
+    ctx.say("song resumed").await?;
     Ok(())
 }
 
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 ///"Shuffle the queue"
 pub async fn shuffle(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
     {
-        let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+        let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
+        //let handler_lock = get_current_voice_chan_handler(&ctx).await?;
         let handler = handler_lock.lock().await;
 
         handler.queue().modify_queue(|q| {
@@ -86,10 +88,11 @@ pub async fn shuffle(ctx: Context<'_>) -> Result<(), Error> {
         let mut rng = rand::rng();
         queue_lock.shuffle(&mut rng);
     }
-    show_n_delete_msg(ctx, "queue shuffled").await?;
+    // show_n_delete_msg(ctx, "queue shuffled").await?;
+    ctx.say("Song shuffling turned on").await?;
     Ok(())
 }
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 ///"join a voice channel"
 pub async fn join(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
@@ -98,46 +101,50 @@ pub async fn join(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 ///"Disconnect and leave"
 pub async fn disconnect(ctx: Context<'_>) -> Result<(), Error> {
     let _ = ctx.defer().await?;
-    let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+
+    let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
+    //let handler_lock = get_current_voice_chan_handler(&ctx).await?;
     let mut handler = handler_lock.lock().await;
     handler.leave().await?;
     ctx.say("left voice channel").await?;
     Ok(())
 }
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only, track_edits)]
 ///"loop the current queue"
 pub async fn loop_toggle(
     ctx: Context<'_>,
     #[description = "Loop count"] count: Option<usize>,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await?;
-    {
-        let handler_lock = get_current_voice_chan_handler(&ctx).await?;
-        let handler = handler_lock.lock().await;
-        let cur_track_handle = handler
-            .queue()
-            .current()
-            .ok_or(anyhow!("Error getting current track"))?;
-        if let Some(count) = count {
-            cur_track_handle.loop_for(count)?;
-            let loop_msg = format!("song looped for {} times", count);
-            show_n_delete_msg(ctx, loop_msg.as_str()).await?;
+    let loop_msg;
+    let handler_lock = join_n_get_voice_channel_handler(&ctx).await?;
+    //let handler_lock = get_current_voice_chan_handler(&ctx).await?;
+    let handler = handler_lock.lock().await;
+    let cur_track_handle = handler
+        .queue()
+        .current()
+        .ok_or(anyhow!("Error getting current track"))?;
+    if let Some(count) = count {
+        cur_track_handle.loop_for(count)?;
+        loop_msg = format!("song looped for {} times", count);
+        // show_n_delete_msg(ctx, loop_msg.as_str()).await?;
+    } else {
+        if cur_track_handle.get_info().await?.loops == LoopState::Finite(0) {
+            cur_track_handle.enable_loop()?;
+            loop_msg = "loop enabled".to_string();
+            // show_n_delete_msg(ctx, "song looped").await?;
         } else {
-            if cur_track_handle.get_info().await?.loops == LoopState::Finite(0) {
-                cur_track_handle.enable_loop()?;
-                show_n_delete_msg(ctx, "song looped").await?;
-            } else {
-                show_n_delete_msg(ctx, "song loop disabled").await?;
-                cur_track_handle.disable_loop()?;
-            }
+            loop_msg = "loop disabled".to_string();
+            // show_n_delete_msg(ctx, "song loop disabled").await?;
+            cur_track_handle.disable_loop()?;
         }
-        //msg = ctx.say("song resumed").await?;
     }
-    ////let msg = ctx.say("song resumed").await?;
+
+    ctx.say(loop_msg).await?;
     Ok(())
 }
 
@@ -164,30 +171,29 @@ pub async fn loop_toggle(
 // }
 // }
 
-#[poise::command(slash_command, prefix_command, guild_only, ephemeral)]
+#[poise::command(slash_command, prefix_command, guild_only)]
 /// This command shows the current playlist of songs in the queue
 pub async fn playlist(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer().await?;
     {
-        let mut data = ctx.data().queue.lock().await;
-        let mut embed = CreateEmbed::new()
-            .title("Current Playlist")
-            .description("Remaining songs to play");
+        let data = ctx.data().queue.lock().await;
+        // let mut embed = CreateEmbed::new()
+        //     .title("Current Playlist")
+        //     .description("Remaining songs to play");
 
-        for track in data.iter_mut().rev() {
-            embed = embed.field(
-                "Track",
-                track
-                    .aux_metadata()
-                    .await?
-                    .title
-                    .ok_or(anyhow!("Error getting title from metadata"))?,
-                false,
-            );
-        }
-        let builder = CreateReply::default().embed(embed);
-        ctx.send(builder).await?;
-        //let _msg = ctx.channel_id().send_message(&ctx.http(), builder).await?;
+        // for track in data.iter_mut().rev() {
+        //     embed = embed.field(
+        //         "Track",
+        //         track
+        //             .aux_metadata()
+        //             .await?
+        //             .title
+        //             .ok_or(anyhow!("Error getting title from metadata"))?,
+        //         false,
+        //     );
+        // }
+        ctx.say(format!("{} songs remaining in the playlist.", data.len()))
+            .await?;
     }
     Ok(())
 }
